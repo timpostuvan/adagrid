@@ -1,8 +1,8 @@
 """
 Plots:
-- grid search AUC vs. edge message ratio graph
-- difference between validation criterion and best grid search AUC heatmap
-- difference between gap criterion and best grid search AUC heatmap
+- complete search AUC vs. edge message ratio graph
+- difference between validation criterion and best complete search AUC heatmap
+- difference between gap criterion and best complete search AUC heatmap
 - difference between validation and gap criterion AUC heatmap
 """
 
@@ -14,17 +14,16 @@ import matplotlib.pylab as plt
 import seaborn as sns
 
 
-def plot_grid_search_results(file_name, grid_search_results, edge_message_ratios, random_test_acc):
+def plot_complete_search_results(file_name, complete_search_results, edge_message_ratios, random_test_acc):
 	random_results = [random_test_acc for x in edge_message_ratios]
 
-	plt.plot(edge_message_ratios, grid_search_results, "b", label="Complete search AUC")
+	plt.plot(edge_message_ratios, complete_search_results, "b", label="Complete search AUC")
 	plt.plot(edge_message_ratios, random_results, "r", label="Random search AUC")
 	plt.legend()
 	
 	plt.title("AUC vs. edge message ratio")
 	plt.xlabel("Edge message ratio")
-	plt.ylabel("AUC")	
-#	plt.show()
+	plt.ylabel("AUC")
 	
 	plt.savefig(file_name)
 	plt.clf()
@@ -36,7 +35,6 @@ def plot_difference_heatmap(file_name, plot_title, results, data_splits, adapt_e
 		int(100 * data_split[2])) for data_split in data_splits]
 	ax = sns.heatmap(100 * results, yticklabels=data_splits_labels, xticklabels=adapt_epochs, annot=True, fmt=".4g")
 	ax.set(title=plot_title, ylabel="Data split", xlabel="Adapt epochs = try epochs")
-#	plt.show()
 
 	plt.savefig(file_name)
 	plt.clf()
@@ -74,40 +72,40 @@ criterions = ['val', 'gap']
 edge_message_ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 
-best_grid_search_accs = []
+best_complete_search_accs = []
 for data_split in data_splits:
 	folder_split = "{}-{}-{}".format(int(100 * data_split[0]), int(100 * data_split[1]), int(100 * data_split[2]))
 	folder_results = folder + "/results/" + folder_split
 
 
-	best_grid_search_val_acc = -np.inf
-	best_grid_search_test_acc = -np.inf
+	best_complete_search_val_acc = -np.inf
+	best_complete_search_test_acc = -np.inf
 
-	grid_search_results = []
+	complete_search_results = []
 	for edge_message_ratio in edge_message_ratios:
 		file_name = folder_results + "/normal_{}.csv".format(int(100 * edge_message_ratio))
 		frame = pd.read_csv(file_name)
 		val_acc = frame.to_numpy()[0][-2]
 		test_acc = frame.to_numpy()[0][-1]
-		grid_search_results.append(test_acc)
+		complete_search_results.append(test_acc)
 
-		if(val_acc > best_grid_search_val_acc):
-			best_grid_search_val_acc = val_acc
-			best_grid_search_test_acc = test_acc
+		if(val_acc > best_complete_search_val_acc):
+			best_complete_search_val_acc = val_acc
+			best_complete_search_test_acc = test_acc
 			
 
-	grid_search_results = np.array(grid_search_results)
+	complete_search_results = np.array(complete_search_results)
 
-	best_grid_search_accs.append(best_grid_search_test_acc)
+	best_complete_search_accs.append(best_complete_search_test_acc)
 
 
 	file_name = folder_results + "/random.csv"
 	frame = pd.read_csv(file_name)
 	random_test_acc = frame.to_numpy()[0][-1]
 
-	file_name = analysis_folder + "/grid_search_results_{}_{}_{}.png".format(int(100 * data_split[0]), 
+	file_name = analysis_folder + "/complete_search_results_{}_{}_{}.png".format(int(100 * data_split[0]), 
 														int(100 * data_split[1]), int(100 * data_split[2]))
-	plot_grid_search_results(file_name, grid_search_results, edge_message_ratios, random_test_acc)
+	plot_complete_search_results(file_name, complete_search_results, edge_message_ratios, random_test_acc)
 
 
 	
@@ -146,16 +144,16 @@ gap_results = np.array(gap_results)
 
 
 
-val_grid_results = np.array([(val_results[i, :]) for i in range(len(val_results))])
-file_name = analysis_folder + "/difference_val_grid_search.png"
+val_complete_search_results = np.array([(val_results[i, :]) for i in range(len(val_results))])
+file_name = analysis_folder + "/difference_val_complete_search.png"
 plot_difference_heatmap(file_name, "Difference between validation criterion and \n best complete search AUC (val - best complete search)", 
-				val_grid_results, data_splits, adapt_epochs)
+				val_complete_search_results, data_splits, adapt_epochs)
 
 
-gap_grid_results = np.array([(gap_results[i, :]) for i in range(len(gap_results))])
-file_name = analysis_folder + "/difference_gap_grid_search.png"
+gap_complete_search_results = np.array([(gap_results[i, :]) for i in range(len(gap_results))])
+file_name = analysis_folder + "/difference_gap_complete_search.png"
 plot_difference_heatmap(file_name, "Difference between gap criterion and \n best complete search AUC (gap - best complete search)", 
-				gap_grid_results, data_splits, adapt_epochs)
+				gap_complete_search_results, data_splits, adapt_epochs)
 
 
 val_gap_results = val_results - gap_results

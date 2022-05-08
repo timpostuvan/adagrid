@@ -1,8 +1,8 @@
 """
 Plots:
-- selected edge message ratio vs. epochs during training for adaptive hill climbing approach 
+- selected edge message ratio vs. epochs during training for AdaGrid approach 
   (on the same figure more subfigures are plotted)
-- on each subfigure also the best grid search message ratio is plotted
+- on each subfigure also the best complete search message ratio is plotted
 """
 
 import argparse
@@ -43,7 +43,7 @@ adapt_epochs = [100, 50, 10]
 try_epochs = [1, 5, -1]
 criterions = ['val', 'gap']
 
-grid_search_edge_message_ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+complete_search_edge_message_ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 
 for data_split in data_splits:
@@ -54,16 +54,16 @@ for data_split in data_splits:
 	Path(analysis_folder).mkdir(parents=True, exist_ok=True)
 
 
-	best_grid_search_val_acc = -np.inf
-	best_grid_search_message_ratio = 0.0
-	for edge_message_ratio in grid_search_edge_message_ratios:
+	best_complete_search_val_acc = -np.inf
+	best_complete_search_message_ratio = 0.0
+	for edge_message_ratio in complete_search_edge_message_ratios:
 		file_name = folder_results + "/normal_{}.csv".format(int(100 * edge_message_ratio))
 		frame = pd.read_csv(file_name)
 		val_acc = frame.to_numpy()[0][-2]
 
-		if(val_acc > best_grid_search_val_acc):
-			best_grid_search_val_acc = val_acc
-			best_grid_search_message_ratio = edge_message_ratio
+		if(val_acc > best_complete_search_val_acc):
+			best_complete_search_val_acc = val_acc
+			best_complete_search_message_ratio = edge_message_ratio
 
 
 
@@ -74,8 +74,8 @@ for data_split in data_splits:
 		for criterion_i in range(len(criterions)):
 			ax = axs[criterion_i]
 			epochs = np.linspace(0, num_epochs, int(num_epochs / adapt_epoch), endpoint=False)
-			grid_search_ratio = [best_grid_search_message_ratio for i in range(int(num_epochs / adapt_epoch))]
-			ax.plot(epochs, grid_search_ratio, "r", label="Best complete search")
+			complete_search_ratio = [best_complete_search_message_ratio for i in range(int(num_epochs / adapt_epoch))]
+			ax.plot(epochs, complete_search_ratio, "r", label="Best complete search")
 				
 			for try_epoch_i in range(len(try_epochs)):
 				criterion = criterions[criterion_i]

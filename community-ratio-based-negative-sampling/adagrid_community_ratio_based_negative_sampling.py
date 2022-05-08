@@ -1,52 +1,3 @@
-"""
-Comparison of hill climbing approach to dynamically adapt edge message ratio during training with 
-standard grid search on edge message ratio and random approach. 
-
-Standard grid search is done on the following hyperparameters:
-- edge message ratio (0.1, 0.2, ..., 0.9)
-
-Random approach changes edge message ratio to a random floating number 
-within range [0.1, 0.9] after every epoch.
-
-Hill climbing approach dynamically adapts edge message ratio every adapt epochs. It trains many 
-copies of the model with different edge message ratios for try epochs and substitutes the 
-model with the best performing copied model according to a criterion. Used criterions are:
-- highest validation accuracy (val)
-- smallest gap between training and validation accuracy: |train acc - val acc| (gap)
-
-Because resample disjoint is used, there can be a big difference between training accuracies 
-of the successive epochs. To get more stable results smoothing is employed - training, validation 
-and test accuracies are averaged over try epochs for each copy of the model.
-
-To get the best performing setting, a grid search is done on the following hyperparameters:
-- adapt epochs (100, 50, 10)
-- try epochs (1, 5, adapt epochs)
-
-Negative sampling is done in a way that objective edges preserve the community ratio of positive edges.
-Community detection is done on a graph with all training edges (message passing and objective), while 
-community ratio is measured as a fraction of objective, positive edges within communities in the validation set.
-
-Model has a fixed number of layers and hidden dimension size.
-
-Optimal training objective probably depends on train/validation/test data split, so the experiment is 
-performed for the following data splits:
-- 0.2/0.4/0.4
-- 0.5/0.25/0.25
-- 0.8/0.1/0.1
-
-To get stable results during training, message and objective edges are shuffled between 
-each other after every epoch and every set of hyperparameters is evaluated 3 times.
-
-
-Program takes the following arguments:
-- gpu id
-- dataset
-- number of layers
-- hidden dimension size
-- whether output is verbose
-"""
-
-
 from pathlib import Path
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
@@ -55,7 +6,6 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 import argparse
 import copy
 import math
-import time
 import random
 import numpy as np
 import pandas as pd
@@ -67,7 +17,6 @@ from networkx.algorithms.community import greedy_modularity_communities
 import networkx as nx
 
 from torch_geometric.datasets import Planetoid
-from torch_geometric.datasets import TUDataset
 import torch_geometric.transforms as T
 import torch_geometric.nn as pyg_nn
 
@@ -138,7 +87,6 @@ class Net(torch.nn.Module):
         self.loss_fn = torch.nn.BCEWithLogitsLoss()
 
     def forward(self, graph):
-        # (batch of) graph object(s) containing all the tensors we want
         x = F.dropout(graph.node_feature, p=0.2, training=self.training)
         x = F.relu(self._conv_op(self.conv_first, x, graph))
 
@@ -219,7 +167,6 @@ def sample_community_ratio(graph, community_ratio, communities, from_community):
 	if graph.edge_index.size() == graph.edge_label_index.size() and (
 	    torch.sum(graph.edge_index - graph.edge_label_index) == 0
 	):
-	    # (train in 'all' mode)
 	    edge_index_all = graph.edge_index
 	else:
 	    edge_index_all = (
@@ -257,7 +204,7 @@ def sample_community_ratio(graph, community_ratio, communities, from_community):
 
 
 def try_edge_message_ratio(edge_message_ratio, model, datasets, dataloaders, optimizer, args,
-							communities, from_community, scheduler=None):	# To get more stable results smoothing is used (average over try epochs)
+							communities, from_community, scheduler=None):
 	datasets['train'].edge_message_ratio = edge_message_ratio
 
 	val_max = -math.inf
@@ -311,7 +258,7 @@ def train(model, datasets, dataloaders, optimizer, args, scheduler=None):
 
 
 
-	# Get community ratio for positive edges in training dataset
+	# get community ratio for positive edges in training dataset
 	within = 0
 	between = 0
 	for iter_i, batch in enumerate(dataloaders['val']):
@@ -378,7 +325,7 @@ def train(model, datasets, dataloaders, optimizer, args, scheduler=None):
 			best_try_optimizer = optimizer
 			best_try_scheduler = scheduler
 
-			# Best version of the best_try_model during training for try epochs (highest validation accuracy)
+			# best version of the best_try_model during training for try epochs (highest validation accuracy)
 			best_val_model = model
 			best_val = -math.inf
 
@@ -512,7 +459,6 @@ def run(args):
 	if(args.dataset == 'pubmed'):
 		pyg_dataset = Planetoid('./datasets', 'PubMed', transform=T.TargetIndegree())
 
-	# the input that we assume users have
 	edge_train_mode = args.mode
 	if(args.verbose):
 		print('edge train mode: {}'.format(edge_train_mode))
@@ -556,10 +502,9 @@ def run(args):
 
 	model = Net(input_dim, args).to(args.device)
 
-	#optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-3)
 	optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-	follow_batch = [] # e.g., follow_batch = ['edge_index']
+	follow_batch = []
 
 	dataloaders = {split: DataLoader(
 	ds, collate_fn=Batch.collate(follow_batch), 
@@ -639,7 +584,7 @@ def main():
 
 
 
-		# Complete search - constant edge message ratio
+		# complete search - constant edge message ratio
 		for edge_message_ratio in edge_message_ratios:
 			args = Arguments(device=device, mode="disjoint", verbose=verbose, dataset=dataset_name, adapt=False, 
 				edge_message_ratio=edge_message_ratio, hidden_dim=hidden_dim, layers=layer, data_split=data_split)
@@ -649,7 +594,7 @@ def main():
 
 
 
-		# Changes edge message randomly after every epoch
+		# random search - changes edge message randomly after every epoch
 		args = Arguments(device=device, mode="disjoint", verbose=verbose, dataset=dataset_name,
 			adapt=False, random=True, hidden_dim=hidden_dim, layers=layer, data_split=data_split)
 		file_name = folder_name + "/random.csv"
@@ -658,7 +603,7 @@ def main():
 		
 
 
-		# Different adapting hill climbing approaches
+		# AdaGrid
 		for criterion in criterions:
 			for adapt_epoch in adapt_epochs:
 				for try_epoch in try_epochs:
