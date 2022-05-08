@@ -10,7 +10,10 @@ AdaGrid can be viewed as an effective automated algorithm for designing machine 
 
 The code requires among others PyTorch, NumPy, SciPy, sklearn, and NetworkX. You can install all the required packages using the following command:
 
-	$ pip install -r requirements.txt
+```
+pip install -r requirements.txt
+```
+
 
 To guarantee that you have the right package versions, you can use [docker](https://docs.docker.com/) to easily set up a virtual environment. See the Docker subsection below for more info.
 
@@ -21,12 +24,16 @@ If you do not have [docker](https://docs.docker.com/) installed, you will need t
 
 You can run AdaGrid inside a [docker](https://docs.docker.com/) image. After cloning the project, build and run the image as following:
 
-	$ docker build -t adagrid .
-	$ docker run -it adagrid
+```
+docker build -t adagrid .
+docker run -it adagrid
+```
 
 You can also run the above build with GPUs:
 
-	$ docker run --gpus=all -it adagrid
+```
+docker run --gpus=all -it adagrid
+```
 
 
 ## Running the code
@@ -38,31 +45,41 @@ To reproduce and analyze the experiments that are included in the [paper](https:
 
 To run the uniform negative sampling experiment on Cora dataset using GNN model with 2 layers and hidden dimension 64:
 
-	$ python adagrid_uniform_negative_sampling.py --dataset cora --num_layers 2 --hidden_dim 64
+```
+python adagrid_uniform_negative_sampling.py --dataset cora --num_layers 2 --hidden_dim 64
+```
 
 We also provide an example which runs the experiment and analyzes the results:
 
-	$ bash example_uniform_negative_sampling.sh
+```
+bash example_uniform_negative_sampling.sh
+```
 
 
 ### Community ratio-based negative sampling experiment
 
 To run the community ratio-based negative sampling experiment on Cora dataset using GNN model with 2 layers and hidden dimension 64:
 
-	$ python adagrid_community_ratio_based_negative_sampling.py --dataset cora --num_layers 2 --hidden_dim 64
-
+```
+python adagrid_community_ratio_based_negative_sampling.py --dataset cora --num_layers 2 --hidden_dim 64
+```
+	
 We also provide an example which runs the experiment and analyzes the results:
 
-	$ bash example_community_ratio_based_negative_sampling.sh
+```
+bash example_community_ratio_based_negative_sampling.sh
+```
 
 
 ## Citation
 
 If you make use of this code or the AdaGrid algorithm in your work, please cite the following paper:
 
-	@article{postuvan2022adagrid,
+```
+@article{postuvan2022adagrid,
 	  	title={AdaGrid: Adaptive Grid Search for Link Prediction Training Objective},
 	  	author={Po{\v{s}}tuvan, Tim and You, Jiaxuan and Banaei, Mohammadreza and Lebret, R{\'e}mi and Leskovec, Jure},
 	  	journal={arXiv preprint arXiv:2203.16162},
 	  	year={2022}
 	}
+```
