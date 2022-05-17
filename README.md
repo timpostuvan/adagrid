@@ -18,7 +18,7 @@ To guarantee that you have the right package versions, you can use [Docker](http
 
 ### Conda
 
-AdaGrid can be run inside a [conda](https://docs.conda.io/projects/conda/en/latest/index.html) environment by cloning the project and running the following commands:
+A conda environment can be set up by cloning the project and running the following commands:
 
 ```
 conda create --name adagrid python=3.9
