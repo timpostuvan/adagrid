@@ -14,9 +14,17 @@ The code requires among others PyTorch, NumPy, SciPy, sklearn, and NetworkX. You
 pip install -r requirements.txt
 ```
 
+To guarantee that you have the right package versions, you can use [Docker](https://docs.docker.com/) to easily set up a virtual environment. It is also possible to run the code within a [conda](https://docs.conda.io/projects/conda/en/latest/index.html) environment. See the Conda and Docker subsections below for more info.
 
-To guarantee that you have the right package versions, you can use [Docker](https://docs.docker.com/) to easily set up a virtual environment. See the Docker subsection below for more info.
+### Conda
 
+AdaGrid can be run inside a [conda](https://docs.conda.io/projects/conda/en/latest/index.html) environment by cloning the project and running the following commands:
+
+```
+conda create --name adagrid python=3.9
+conda activate adagrid
+pip install -r requirements.txt
+```
 
 ### Docker
 
